@@ -1,0 +1,283 @@
+#!/usr/bin/env python
+from z3 import *
+#set_param("parallel.enable", True)
+
+import argparse
+
+parser = argparse.ArgumentParser(
+	prog = 'stm32f103x8-clock-solver',
+	epilog = 'Numeric values can be written with suffixes ("100k" for 100 kHz, "48M" for 48 MHz) and also as ranges ("..100k" meaning "≤ 100 kHz").',
+	allow_abbrev=False,
+)
+
+parse_src = parser.add_argument_group('Oscillators')
+
+parse_src.add_argument('--hse', metavar='FREQ', help='restrict HSE (use 0 to avoid external oscillator)')
+parse_src.add_argument('--lse', choices='0 1'.split(), help='restrict LSE (0 to avoid it, 1 to enforce its presence)')
+
+parse_dst = parser.add_argument_group('Peripherals')
+
+parse_dst.add_argument('--adc',    metavar='FREQ', help='restrict ADCCLK')
+parse_dst.add_argument('--flash',  metavar='FREQ', help='restrict FLITFCLK')
+parse_dst.add_argument('--mco',    metavar='FREQ', help='restrict MCO')
+parse_dst.add_argument('--pclk1',  metavar='FREQ', help='restrict PCLK1 (use ".." to enforce all valid frequencies)')
+parse_dst.add_argument('--pclk2',  metavar='FREQ', help='restrict PCLK2 (use ".." to enforce all valid frequencies)')
+parse_dst.add_argument('--rtc',    metavar='FREQ', help='restrict RTCCLK')
+parse_dst.add_argument('--tim1',   metavar='FREQ', help='restrict TIM1CLK')
+parse_dst.add_argument('--timx',   metavar='FREQ', help='restrict TIMXCLK')
+parse_dst.add_argument('--usb', action='store_true', help='enforce valid USBCLK')
+
+parse_cortex = parser.add_argument_group('Cortex clocks')
+
+parse_cortex.add_argument('--systick', metavar='FREQ', help='restrict SysTick')
+parse_cortex.add_argument('--hclk',    metavar='FREQ', help='restrict HCLK')
+parse_cortex.add_argument('--fclk',    metavar='FREQ', help='restrict FCLK')
+
+parse_intermediate = parser.add_argument_group('Intermediate clocks')
+
+parse_intermediate.add_argument('--sys',     metavar='FREQ', help='restrict SYSCLK')
+parse_intermediate.add_argument('--pll',     metavar='FREQ', help='restrict PLLCLK')
+
+parse_prescale = parser.add_argument_group('Prescalers')
+
+# not using type=int here: we also accept ranges
+parse_prescale.add_argument('--apb1div',  metavar='INT', help='restrict APB1 prescaler')
+parse_prescale.add_argument('--apb2div',  metavar='INT', help='restrict APB2 prescaler')
+parse_prescale.add_argument('--adcdiv',   metavar='INT', help='restrict ADC prescaler')
+parse_prescale.add_argument('--ahbdiv',   metavar='INT', help='restrict AHB prescaler')
+parse_prescale.add_argument('--pllmul',   metavar='INT', help='restrict PLL prescaler')
+parse_prescale.add_argument('--tim1mul',  metavar='INT', help='restrict TIM1 prescaler')
+parse_prescale.add_argument('--timxmul',  metavar='INT', help='restrict TIMX prescaler')
+
+parse_prescale.add_argument('--pllxtpre', choices='1 2'.split(), help='set PLLXTPRE (HSE → PLL) prescaler')
+parse_prescale.add_argument('--usbdiv',   choices='1 1.5'.split(), help='set USB prescaler')
+
+parse_sel = parser.add_argument_group('Selectors')
+
+parse_sel.add_argument('--rtcsel', choices='lse lsi hse'.split(), help='set RTCSEL (RTCCLK source)')
+parse_sel.add_argument('--mcosrc', choices='sys hsi hse plc'.split(), help='set MCO source')
+parse_sel.add_argument('--sw', choices='hsi hse plc'.split(), help='set SW (SYSCLK source)')
+parse_sel.add_argument('--pllsrc', choices='hse hsi'.split(), help='set PLLSRC (PLL source)')
+
+args = parser.parse_args()
+
+# TODO? CSS
+
+conditions = []
+
+# frequencies
+for i in '''
+	SYSCLK
+	HSI LSI
+	USBCLK
+	FLITFCLK
+	PLLCLK
+	SysTick
+	AHB HCLK FCLK ADCCLK
+	PCLK1 PCLK2
+	APB1 APB2
+	TIM1CLK TIMXCLK
+	PLL
+	RTCCLK MCO
+'''.split():
+	globals()[i] = Int(i)
+	conditions.append(globals()[i] > 0)
+
+# flags, also external oscillators and their immediate derivatives that can be 0
+for i in 'LSE HSE PLLX SW PLLSRC PLLXTPRE RTCSEL MCOSRC'.split():
+	globals()[i] = Int(i)
+
+# prescalers
+for i in 'USB APB1 APB2 ADC AHB'.split():
+	globals()[i + 'DIV'] = Int(i + 'DIV')
+for i in 'PLL TIM1 TIMX'.split():
+	globals()[i + 'MUL'] = Int(i + 'MUL')
+
+# via datasheet, page 12, figure 2
+conditions += [
+	SYSCLK <= 72e6, # max 72 MHz
+	LSI == 40e3, # 40 kHz
+	Or(
+		LSE == 32.768e3, # 32.768 kHz
+		LSE == 0, # no external oscillator
+	),
+	Or(
+		And(HSE >= 4e6, HSE <= 16e6), # 4-16 MHz
+		HSE == 0, # no external oscillator
+	),
+	HSI == 8e6, # 8 MHz
+	Or(USBDIV == 1, USBDIV == 1.5),
+	USBCLK == PLLCLK / USBDIV,
+	FLITFCLK == HSI,
+	SysTick == AHB / 8,
+	HCLK == AHB,
+	HCLK <= 72e6, # 72 MHz max
+	FCLK == AHB,
+	PCLK1 == APB1,
+	PCLK2 == APB2,
+	APB1 == AHB / APB1DIV,
+	Or(
+		APB1DIV == 1,
+		APB1DIV == 2,
+		APB1DIV == 4,
+		APB1DIV == 8,
+		APB1DIV == 16,
+	),
+	APB2 == AHB / APB2DIV,
+	Or(
+		APB2DIV == 1,
+		APB2DIV == 2,
+		APB2DIV == 4,
+		APB2DIV == 8,
+		APB2DIV == 16,
+	),
+	ADCCLK == APB2 / ADCDIV,
+	Or(
+		ADCDIV == 2,
+		ADCDIV == 4,
+		ADCDIV == 6,
+		ADCDIV == 8,
+	),
+	AHBDIV >= 1, AHBDIV <= 512,
+	AHB == SYSCLK / AHBDIV,
+	TIM1MUL == If(APB2DIV == 1, 1, 2),
+	TIMXMUL == If(APB1DIV == 1, 1, 2),
+	TIM1CLK == APB2 * TIM1MUL,
+	TIMXCLK == APB1 * TIMXMUL,
+	SW >= 0b00, SW <= 0b10,
+	SYSCLK ==
+		If(SW == 0b00, HSI,
+		If(SW == 0b01, HSE,
+		If(SW == 0b10, PLLCLK,
+		-1 # impossible
+		))),
+	PLLMUL >= 2, PLLMUL <= 16,
+	PLLCLK == PLL * PLLMUL,
+	PLL == If(PLLSRC == 1, PLLX, HSI/2),
+	PLLX == If(PLLXTPRE == 1, HSE/2, HSE),
+	RTCSEL >= 0b00, RTCSEL <= 0b11,
+	RTCCLK ==
+		If(RTCSEL == 0b01, LSE,
+		If(RTCSEL == 0b10, LSI,
+		If(RTCSEL == 0b11, HSE/128,
+		0 # disabled
+		))),
+	MCOSRC >= 0b00, MCOSRC <= 0b11,
+	MCO ==
+		If(MCOSRC == 0b00, SYSCLK,
+		If(MCOSRC == 0b01, HSI,
+		If(MCOSRC == 0b10, HSE,
+		PLLCLK/2,
+		)))
+]
+
+s = Solver()
+for i in conditions:
+	s.add(i)
+
+def parse_freq(s):
+	mul = 1
+	if s.endswith('k'):
+		mul = 1e3
+		s = s[:-1]
+	elif s.endswith('M'):
+		mul = 1e6
+		s = s[:-1]
+	return int(float(s) * mul)
+
+def parse_freqs(what, s):
+	if s is None:
+		# no argument
+		return True
+
+	if '..' not in s:
+		return what == parse_freq(s)
+
+	a, b = s.split('..')
+	if a:
+		a = what >= parse_freq(a)
+	else:
+		a = True
+	if b:
+		b = what <= parse_freq(b)
+	else:
+		b = True
+
+	return And(a, b)
+
+s.add(parse_freqs(HSE, args.hse))
+if args.lse == 0:
+	s.add(LSE == 0)
+if args.lse == 1:
+	s.add(LSE != 0)
+
+s.add(parse_freqs(ADCCLK,   args.adc))
+s.add(parse_freqs(FLITFCLK, args.flash))
+s.add(parse_freqs(MCO,      args.mco))
+
+s.add(parse_freqs(PCLK1, args.pclk1))
+s.add(parse_freqs(PCLK2, args.pclk2))
+if args.pclk1:
+	s.add(PCLK1 <= 36e6) # 36 MHz max
+if args.pclk2:
+	s.add(PCLK2 <= 72e6) # 72 MHz max
+
+s.add(parse_freqs(RTCCLK,  args.rtc))
+s.add(parse_freqs(TIM1CLK, args.tim1))
+s.add(parse_freqs(TIMXCLK, args.timx))
+
+if args.usb:
+	s.add(USBCLK == 48e6) # 48 MHz
+
+s.add(parse_freqs(SysTick, args.systick))
+s.add(parse_freqs(HCLK,    args.hclk))
+s.add(parse_freqs(FCLK,    args.fclk))
+
+s.add(parse_freqs(SYSCLK, args.sys))
+s.add(parse_freqs(PLLCLK, args.pll))
+
+s.add(parse_freqs(APB1DIV, args.apb1div))
+s.add(parse_freqs(APB2DIV, args.apb2div))
+s.add(parse_freqs(ADCDIV,  args.adcdiv))
+s.add(parse_freqs(AHBDIV,  args.ahbdiv))
+s.add(parse_freqs(PLLMUL,  args.pllmul))
+s.add(parse_freqs(TIM1MUL, args.tim1mul))
+s.add(parse_freqs(TIMXMUL, args.timxmul))
+
+if args.pllxtpre:
+	s.add(PLLXTPRE == int(args.pllxtpre))
+if args.usbdiv:
+	s.add(USBDIV == float(args.usbdiv))
+
+if args.rtcsel:
+	s.add(RTCSEL == dict(
+		lse = 0b01,
+		lsi = 0b10,
+		hse = 0b11,
+	)[args.rtcsel])
+
+if args.mcosrc:
+	s.add(MCOSRC == dict(
+		sys = 0b00,
+		hsi = 0b01,
+		hse = 0b10,
+		plc = 0b11,
+	)[args.mcosrc])
+
+if args.sw:
+	s.add(SW == dict(
+		hsi = 0b00,
+		hse = 0b01,
+		plc = 0b10,
+	)[args.sw])
+
+if args.pllsrc:
+	s.add(PLLSRC == dict(
+		hse = 0,
+		hsi = 1,
+	)[args.pllsrc])
+
+if s.check() == sat:
+	print(s.model())
+else:
+	print('Impossible combination')
