@@ -278,6 +278,70 @@ if args.pllsrc:
 	)[args.pllsrc])
 
 if s.check() == sat:
-	print(s.model())
+	m = s.model()
+
+	print('Oscillators:')
+	for i in 'HSE LSE'.split():
+		val = m[globals()[i]]
+		if val is not None:
+			print(f'\t{i:10s} {val.as_long():9}')
+
+	print('Selectors:')
+
+	val = m[RTCSEL]
+	if val is not None:
+		print(f'''\t{"RTCSEL":10s} {({
+			0b01: "LSE",
+			0b10: "LSI",
+			0b11: "HSE",
+		})[val.as_long()]}''')
+
+	val = m[MCOSRC]
+	if val is not None:
+		print(f'''\t{"MCO":10s} {({
+			0b00: "SYS",
+			0b01: "HSI",
+			0b10: "HSE",
+			0b11: "PLC",
+		})[val.as_long()]}''')
+
+	val = m[SW]
+	if val is not None:
+		print(f'''\t{"SW":10s} {({
+			0b00: "HSI",
+			0b01: "HSE",
+			0b10: "PLC",
+		})[val.as_long()]}''')
+
+	val = m[PLLSRC]
+	if val is not None:
+		print(f'''\t{"PLLSRC":10s} {({
+			0: "HSE",
+			1: "HSI",
+		})[val.as_long()]}''')
+
+	print('Prescalers:')
+	for i in 'APB1DIV APB2DIV ADCDIV AHBDIV PLLXTPRE PLLMUL TIM1MUL TIMXMUL USBDIV'.split():
+		val = m[globals()[i]]
+		if val is not None:
+			print(f'\t{i:10s} {val.as_long():9}')
+
+	print('Intermediate:')
+	for i in 'SYSCLK PLLCLK'.split():
+		val = m[globals()[i]]
+		if val is not None:
+			print(f'\t{i:10s} {val.as_long():9}')
+
+	print('Cortex:')
+	for i in 'SysTick HCLK FCLK'.split():
+		val = m[globals()[i]]
+		if val is not None:
+			print(f'\t{i:10s} {val.as_long():9}')
+
+	print('Peripherals:')
+	for i in 'ADCCLK FLITFCLK MCO PCLK1 PCLK2 RTCCLK TIM1CLK TIMXCLK USBCLK'.split():
+		val = m[globals()[i]]
+		if val is not None:
+			print(f'\t{i:10s} {val.as_long():9}')
 else:
 	print('Impossible combination')
