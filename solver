@@ -153,7 +153,15 @@ conditions += [
 		))),
 	PLLMUL >= 2, PLLMUL <= 16,
 	PLLCLK == PLL * PLLMUL,
+	Or(
+		PLLSRC == 0,
+		PLLSRC == 1,
+	),
 	PLL == If(PLLSRC == 1, PLLX, HSI/2),
+	Or(
+		PLLXTPRE == 0,
+		PLLXTPRE == 1,
+	),
 	PLLX == If(PLLXTPRE == 1, HSE/2, HSE),
 	RTCSEL >= 0b00, RTCSEL <= 0b11,
 	RTCCLK ==
