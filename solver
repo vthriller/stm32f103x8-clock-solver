@@ -352,7 +352,21 @@ if s.check() == sat:
 		print_pretty(m, i)
 
 	print('Peripherals:')
-	for i in 'ADCCLK FLITFCLK MCO PCLK1 PCLK2 RTCCLK TIM1CLK TIMXCLK USBCLK'.split():
+	if args.adc:
+		print_pretty(m, 'ADCCLK')
+	for i in 'FLITFCLK MCO'.split():
 		print_pretty(m, i)
+	if args.pclk1:
+		print_pretty(m, 'PCLK1')
+	if args.pclk2:
+		print_pretty(m, 'PCLK2')
+	if args.rtc:
+		print_pretty(m, 'RTCCLK')
+	if args.tim1:
+		print_pretty(m, 'TIM1CLK')
+	if args.timx:
+		print_pretty(m, 'TIMXCLK')
+	if args.usb:
+		print_pretty(m, 'USBCLK')
 else:
 	print('Impossible combination')

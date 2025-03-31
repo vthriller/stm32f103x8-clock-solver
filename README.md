@@ -62,11 +62,6 @@ Peripherals:
         ADCCLK          7858 
         FLITFCLK         8.0M
         MCO              8.0M
-        PCLK1          15717 
-        PCLK2          15717 
-        RTCCLK          40.0k
-        TIM1CLK        15717 
-        TIMXCLK        15717 
         USBCLK          48.0M
 ```
 
@@ -108,10 +103,5 @@ Peripherals:
         ADCCLK          10.0k
         FLITFCLK         8.0M
         MCO             24.0M
-        PCLK1           10.0k
-        PCLK2           20.0k
-        RTCCLK          40.0k
-        TIM1CLK         20.0k
-        TIMXCLK         20.0k
         USBCLK          48.0M
 ```
