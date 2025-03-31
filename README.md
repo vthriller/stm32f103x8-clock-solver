@@ -15,7 +15,7 @@ Peripherals:
   ...
   --rtc FREQ            restrict RTCCLK
   ...
-  --usb                 enforce valid USBCLK
+  --usb                 enforce valid USBCLK; implies --hse .. --pllsrc hse
 
 ...
 
@@ -25,12 +25,12 @@ Selectors:
 ```
 
 ```
-$ ./solver --usb --hse 8M --pllsrc hse --rtc 16384
+$ ./solver --usb --hse 8M --rtc 16384
 Impossible combination
 ```
 
 ```
-$ ./solver --usb --hse 8M --pllsrc hse --rtc 16384.. # note the difference in rtc: this time it's "16384 or more"
+$ ./solver --usb --hse 8M --rtc 16384.. # note the difference in rtc: this time it's "16384 or more"
 Oscillators:
 	HSI              8.0M
 	HSE              8.0M
@@ -71,7 +71,7 @@ Peripherals:
 ```
 
 ```
-$ ./solver --usb --hse 8M --pllsrc hse --rtc 16384.. --adc 1k
+$ ./solver --usb --hse 8M --rtc 16384.. --adc 1k
 Oscillators:
 	HSI              8.0M
 	HSE              8.0M

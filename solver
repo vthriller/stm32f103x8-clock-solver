@@ -25,7 +25,7 @@ parse_dst.add_argument('--pclk2',  metavar='FREQ', help='restrict PCLK2 (use "..
 parse_dst.add_argument('--rtc',    metavar='FREQ', help='restrict RTCCLK')
 parse_dst.add_argument('--tim1',   metavar='FREQ', help='restrict TIM1CLK')
 parse_dst.add_argument('--timx',   metavar='FREQ', help='restrict TIMXCLK')
-parse_dst.add_argument('--usb', action='store_true', help='enforce valid USBCLK')
+parse_dst.add_argument('--usb', action='store_true', help='enforce valid USBCLK; implies --hse .. --pllsrc hse')
 
 parse_cortex = parser.add_argument_group('Cortex clocks')
 
@@ -60,6 +60,17 @@ parse_sel.add_argument('--sw', choices='hsi hse plc'.split(), help='set SW (SYSC
 parse_sel.add_argument('--pllsrc', choices='hse hsi'.split(), help='set PLLSRC (PLL source)')
 
 args = parser.parse_args()
+
+# > For the availability of the USB function both HSE and PLL must be enabled
+if args.usb:
+	if args.hse == '0':
+		exit('--usb requires HSE')
+	elif args.hse is None:
+		args.hse = '..'
+	if args.pllsrc == 'hsi':
+		exit('--usb requires HSE as the PLLSRC')
+	elif args.pllsrc is None:
+		args.pllsrc = 'hse'
 
 # TODO? CSS
 
