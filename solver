@@ -302,7 +302,7 @@ if s.check() == sat:
 	m = s.model()
 
 	print('Oscillators:')
-	for i in 'HSE LSE'.split():
+	for i in 'HSI HSE LSI LSE'.split():
 		print_pretty(m, i)
 
 	print('Selectors:')
@@ -344,7 +344,7 @@ if s.check() == sat:
 		print_pretty(m, i)
 
 	print('Intermediate:')
-	for i in 'SYSCLK PLLCLK'.split():
+	for i in 'PLLX PLL PLLCLK SYSCLK AHB APB1 APB2'.split():
 		print_pretty(m, i)
 
 	print('Cortex:')

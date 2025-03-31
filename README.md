@@ -27,7 +27,9 @@ Impossible combination
 ```
 $ ./solver --usb --adc ..10k
 Oscillators:
+        HSI              8.0M
         HSE                0 
+        LSI             40.0k
         LSE                0 
 Selectors:
         RTCSEL     LSI
@@ -45,8 +47,13 @@ Prescalers:
         TIMXMUL            1 
         USBDIV             1 
 Intermediate:
-        SYSCLK           8.0M
+        PLLX               0 
+        PLL              4.0M
         PLLCLK          48.0M
+        SYSCLK           8.0M
+        AHB            15717 
+        APB1           15717 
+        APB2           15717 
 Cortex:
         SysTick         1964 
         HCLK           15717 
@@ -66,7 +73,9 @@ Peripherals:
 ```
 $ ./solver --usb --adc 10k
 Oscillators:
+        HSI              8.0M
         HSE                0 
+        LSI             40.0k
         LSE                0 
 Selectors:
         RTCSEL     LSI
@@ -84,8 +93,13 @@ Prescalers:
         TIMXMUL            2 
         USBDIV             1 
 Intermediate:
-        SYSCLK           8.0M
+        PLLX               0 
+        PLL              4.0M
         PLLCLK          48.0M
+        SYSCLK           8.0M
+        AHB             20.0k
+        APB1            10.0k
+        APB2            20.0k
 Cortex:
         SysTick          2.5k
         HCLK            20.0k
