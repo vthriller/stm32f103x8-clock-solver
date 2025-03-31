@@ -26,6 +26,7 @@ parse_dst.add_argument('--rtc',    metavar='FREQ', help='restrict RTCCLK')
 parse_dst.add_argument('--tim1',   metavar='FREQ', help='restrict TIM1CLK')
 parse_dst.add_argument('--timx',   metavar='FREQ', help='restrict TIMXCLK')
 parse_dst.add_argument('--usb', action='store_true', help='enforce valid USBCLK; implies --hse .. --pllsrc hse')
+parse_dst.add_argument('--i2c', choices='std fast 400k'.split(), help='enforce valid PCLK1 for corresponding I²C mode; implies --pclk1 ..')
 
 parse_cortex = parser.add_argument_group('Cortex clocks')
 
@@ -252,6 +253,19 @@ s.add(parse_freqs(TIMXCLK, args.timx))
 
 if args.usb:
 	s.add(USBCLK == 48e6) # 48 MHz
+
+if args.i2c:
+	if args.pclk1 is None:
+		args.pclk1 = '..'
+	if args.i2c == 'std':
+		# > f_PCLK1 must be at least 2 MHz to achieve standard mode I²C frequencies.
+		s.add(parse_freqs(PCLK1, '2M..'))
+	elif args.i2c == 'fast':
+		# > It must be at least 4 MHz to achieve fast mode I²C frequencies.
+		s.add(parse_freqs(PCLK1, '4M..'))
+	elif args.i2c == '400k':
+		# > It must be a multiple of 10 MHz to reach the 400 kHz maximum I²C fast mode clock.
+		s.add(PCLK1 % int(10e6) == 0)
 
 s.add(parse_freqs(SysTick, args.systick))
 s.add(parse_freqs(HCLK,    args.hclk))
