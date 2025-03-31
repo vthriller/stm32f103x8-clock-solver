@@ -290,7 +290,9 @@ def print_pretty(m, name):
 	if n is None:
 		return
 	n = n.as_long()
-	if n % 100e3 == 0:
+	if n == 0:
+		n = f'{n:9} '
+	elif n % 100e3 == 0:
 		n = f'{n/1e6:9.1f}M'
 	elif n % 100 == 0:
 		n = f'{n/1e3:9.1f}k'

@@ -27,8 +27,8 @@ Impossible combination
 ```
 $ ./solver --usb --adc ..10k --hse 0 --lse 0 
 Oscillators:
-        HSE              0.0M
-        LSE              0.0M
+        HSE                0 
+        LSE                0 
 Selectors:
         RTCSEL     LSI
         MCO        SYS
@@ -39,7 +39,7 @@ Prescalers:
         APB2DIV            1 
         ADCDIV             2 
         AHBDIV           509 
-        PLLXTPRE         0.0M
+        PLLXTPRE           0 
         PLLMUL            12 
         TIM1MUL            1 
         TIMXMUL            1 
@@ -66,8 +66,8 @@ Peripherals:
 ```
 $ ./solver --usb --adc 10k --hse 0 --lse 0 
 Oscillators:
-        HSE              0.0M
-        LSE              0.0M
+        HSE                0 
+        LSE                0 
 Selectors:
         RTCSEL     LSI
         MCO        PLC
@@ -78,7 +78,7 @@ Prescalers:
         APB2DIV            1 
         ADCDIV             2 
         AHBDIV           0.4k
-        PLLXTPRE         0.0M
+        PLLXTPRE           0 
         PLLMUL            12 
         TIM1MUL            1 
         TIMXMUL            2 
