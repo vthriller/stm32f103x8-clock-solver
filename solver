@@ -187,7 +187,10 @@ conditions += [
 		If(MCOSRC == 0b01, HSI,
 		If(MCOSRC == 0b10, HSE,
 		PLLCLK/2,
-		)))
+		))),
+	# page 56 table 27 footnote 2
+	# > Take care of using the appropriate multiplier factors so as to have PLL input clock values compatible with the range defined by f_PLL_OUT.
+	PLLCLK >= 16e6, PLLCLK <= 72e6, # 16-72 MHz
 ]
 
 s = Solver()
@@ -229,6 +232,10 @@ if args.lse:
 	s.add(LSE != 0)
 
 s.add(parse_freqs(ADCCLK,   args.adc))
+if args.adc:
+	# page 74 table 47
+	s.add(ADCCLK >= .6e6, ADCCLK <= 14e6) # 0.6-14 MHz
+
 s.add(parse_freqs(FLITFCLK, args.flash))
 s.add(parse_freqs(MCO,      args.mco))
 

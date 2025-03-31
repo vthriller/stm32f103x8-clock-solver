@@ -71,7 +71,7 @@ Peripherals:
 ```
 
 ```
-$ ./solver --usb --hse 8M --rtc 16384.. --adc 1k
+$ ./solver --usb --hse 8M --rtc 16384.. --adc 1M
 Oscillators:
 	HSI              8.0M
 	HSE              8.0M
@@ -80,32 +80,32 @@ Oscillators:
 Selectors:
 	RTCSEL     HSE
 	MCO        SYS
-	SW         HSI
+	SW         HSE
 	PLLSRC     HSE
 Prescalers:
-	APB1DIV            8 
-	APB2DIV            8 
-	ADCDIV             8 
-	AHBDIV           125 
+	APB1DIV            1 
+	APB2DIV            1 
+	ADCDIV             2 
+	AHBDIV             4 
 	PLLXTPRE           0 
 	PLLMUL            12 
-	TIM1MUL            2 
-	TIMXMUL            2 
+	TIM1MUL            1 
+	TIMXMUL            1 
 	USBDIV             1 
 Intermediate:
 	PLLX             8.0M
 	PLL              4.0M
 	PLLCLK          48.0M
 	SYSCLK           8.0M
-	AHB             64.0k
-	APB1             8.0k
-	APB2             8.0k
+	AHB              2.0M
+	APB1             2.0M
+	APB2             2.0M
 Cortex:
-	SysTick          8.0k
-	HCLK            64.0k
-	FCLK            64.0k
+	SysTick        250.0k
+	HCLK             2.0M
+	FCLK             2.0M
 Peripherals:
-	ADCCLK           1.0k
+	ADCCLK           1.0M
 	FLITFCLK         8.0M
 	MCO              8.0M
 	RTCCLK          62.5k
