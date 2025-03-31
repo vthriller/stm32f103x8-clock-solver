@@ -12,8 +12,8 @@ parser = argparse.ArgumentParser(
 
 parse_src = parser.add_argument_group('Oscillators')
 
-parse_src.add_argument('--hse', metavar='FREQ', help='restrict HSE (use 0 to avoid external oscillator)')
-parse_src.add_argument('--lse', choices='0 1'.split(), help='restrict LSE (0 to avoid it, 1 to enforce its presence)')
+parse_src.add_argument('--hse', metavar='FREQ', help='enforce presence of HSE (use ".." to accept any valid frequency)')
+parse_src.add_argument('--lse', action='store_true', help='enforce presence of LSE')
 
 parse_dst = parser.add_argument_group('Peripherals')
 
@@ -213,10 +213,8 @@ def parse_freqs(what, s):
 
 	return And(a, b)
 
-s.add(parse_freqs(HSE, args.hse))
-if args.lse == 0:
-	s.add(LSE == 0)
-if args.lse == 1:
+s.add(parse_freqs(HSE, args.hse or '0')) # if there is no argument, assume no osc
+if args.lse:
 	s.add(LSE != 0)
 
 s.add(parse_freqs(ADCCLK,   args.adc))

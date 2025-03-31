@@ -7,8 +7,8 @@ $ ./solver --help
 ...
 
 Oscillators:
-  --hse FREQ            restrict HSE (use 0 to avoid external oscillator)
-  --lse {0,1}           restrict LSE (0 to avoid it, 1 to enforce its presence)
+  --hse FREQ            enforce presence of HSE (use ".." to accept any valid frequency)
+  --lse                 enforce presence of LSE
 
 Peripherals:
   --adc FREQ            restrict ADCCLK
@@ -20,12 +20,12 @@ Peripherals:
 ```
 
 ```
-$ ./solver --usb --adc ..10k --hse 48M --lse 0 
+$ ./solver --usb --adc ..10k --hse 48M
 Impossible combination
 ```
 
 ```
-$ ./solver --usb --adc ..10k --hse 0 --lse 0 
+$ ./solver --usb --adc ..10k
 Oscillators:
         HSE                0 
         LSE                0 
@@ -64,7 +64,7 @@ Peripherals:
 ```
 
 ```
-$ ./solver --usb --adc 10k --hse 0 --lse 0 
+$ ./solver --usb --adc 10k
 Oscillators:
         HSE                0 
         LSE                0 
